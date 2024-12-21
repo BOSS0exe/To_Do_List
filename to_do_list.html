@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 1200px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .app-header {
+            position: relative;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .task-form {
+            background: rgba(63, 59, 59, 0.05);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+        }
+
+        .form-control, .form-select {
+            background: rgba(255, 255, 255, 0.235);
+            border: 1px solid rgba(38, 36, 36, 0.1);
+            color: rgb(242, 236, 236);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: #5951515d;
+            border-color: rgba(236, 230, 230, 0.3);
+            box-shadow: 0 0 0 0.25rem rgba(211, 201, 201, 0.1);
+            color: rgb(76, 70, 70);
+        }
+
+        .tasks-section {
+            background: rgba(189, 3, 3, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .list-group-item {
+            background: #2924240d;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 0.5rem;
+            border-radius: 12px !important;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .list-group-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .category-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 0.75rem;
+            box-shadow: 0 2px 4px rgba(46, 40, 40, 0.2);
+        }
+
+        .task-date {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification.success {
+            background-color: rgba(40, 167, 69, 0.9);
+        }
+
+        .notification.error {
+            background-color: rgba(220, 53, 69, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-header">
+        <h1 class="text-center mb-4">To-Do List</h1>
+    </div>
+
+    <div class="stats-container">
+        <div class="row">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="stat-box">
+                    <h4>Open Tasks</h4>
+                    <h2 id="openTasksCount">0</h2>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="stat-box">
+                    <h4>Completed Tasks</h4>
+                    <h2 id="completedTasksCount">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form class="task-form mb-4" id="taskForm">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <input type="text" id="taskName" class="form-control" placeholder="What needs to be done?" required>
+            </div>
+            <div class="col-md-3">
+                <select id="category" class="form-select" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="work" data-color="#ff6b6b">Work</option>
+                    <option value="personal" data-color="#4ecdc4">Personal</option>
+                    <option value="shopping" data-color="#45b7d1">Shopping</option>
+                    <option value="health" data-color="#96ceb4">Health</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" id="dueDate" class="form-control flatpickr" placeholder="Due Date" required>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Add</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-md-6 mb-4 mb-md-0">
+            <div class="tasks-section">
+                <h2 class="section-title">Open Tasks</h2>
+                <div class="list-group" id="openTasks"></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="tasks-section">
+                <h2 class="section-title">Completed Tasks</h2>
+                <div class="list-group" id="completedTasks"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notification" class="notification"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // Initialize date picker
+    flatpickr("#dueDate", {
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        theme: "dark"
+    });
+
+    // Task management
+    class TaskManager {
+        constructor() {
+            this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            this.initializeEventListeners();
+            this.renderTasks();
+        }
+
+        showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        addTask(name, category, dueDate) {
+            const task = {
+                id: Date.now(),
+                name,
+                category,
+                dueDate,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+
+            this.tasks.push(task);
+            this.saveTasks();
+            this.showNotification('Task added successfully!', 'success');
+            return task;
+        }
+
+        deleteTask(id) {
+            this.tasks = this.tasks.filter(task => task.id !== id);
+            this.saveTasks();
+            this.showNotification('Task deleted successfully!', 'success');
+        }
+
+        toggleTaskCompletion(id) {
+            const task = this.tasks.find(task => task.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                this.saveTasks();
+                this.showNotification(task.completed ? 'Task completed!' : 'Task reopened!', 'success');
+            }
+        }
+
+        saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(this.tasks));
+            this.renderTasks();
+        }
+
+        getCategoryColor(category) {
+            const select = document.getElementById('category');
+            const option = Array.from(select.options).find(opt => opt.value === category);
+            return option ? option.dataset.color : '#777';
+        }
+
+        renderTasks() {
+            const openTasks = this.tasks.filter(task => !task.completed);
+            const completedTasks = this.tasks.filter(task => task.completed);
+
+            document.getElementById('openTasksCount').textContent = openTasks.length;
+            document.getElementById('completedTasksCount').textContent = completedTasks.length;
+
+            this.renderTaskList('openTasks', openTasks);
+            this.renderTaskList('completedTasks', completedTasks);
+        }
+
+        renderTaskList(containerId, tasks) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = tasks.length ? '' : '<div class="list-group-item text-center">No tasks found</div>';
+
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'list-group-item';
+                taskElement.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="category-badge" style="background-color: ${this.getCategoryColor(task.category)}">
+                                ${task.category.charAt(0).toUpperCase() + task.category.slice(1)}
+                            </span>
+                            <div class="task-name">${task.name}</div>
+                            <div class="task-date">
+                                Due: ${new Date(task.dueDate).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            ${!task.completed ? 
+                                `<button onclick="taskManager.toggleTaskCompletion(${task.id})" class="btn btn-success btn-action">Complete</button>` : 
+                                `<button onclick="taskManager.toggleTaskCompletion(${task.id})" class="btn btn-warning btn-action">Reopen</button>`
+                            }
+                            <button onclick="taskManager.deleteTask(${task.id})" class="btn btn-danger btn-action">Delete</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(taskElement);
+            });
+        }
+
+        initializeEventListeners() {
+            document.getElementById('taskForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('taskName').value;
+                const category = document.getElementById('category').value;
+                const dueDate = document.getElementById('dueDate').value;
+
+                if (name && category && dueDate) {
+                    this.addTask(name, category, dueDate);
+                    e.target.reset();
+                }
+            });
+        }
+    }
+
+    // Initialize the task manager
+    const taskManager = new TaskManager();
+</script>
+
+</body>
+</html>
